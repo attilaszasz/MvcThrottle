@@ -35,6 +35,13 @@ namespace MvcThrottle
         public EndpointThrottlingType EndpointType { get; set; }
 
         /// <summary>
+        /// Enables User-Agent throttling
+        /// </summary>
+        public bool UserAgentThrottling { get; set; }
+        public List<string> UserAgentBlacklist { get; set; }
+        public Dictionary<string, RateLimits> UserAgentRules { get; set; }
+
+        /// <summary>
         /// All requests including the rejected ones will stack in this order: week, day, hour, min, sec
         /// </summary>
         public bool StackBlockedRequests { get; set; }

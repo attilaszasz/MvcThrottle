@@ -136,6 +136,19 @@ namespace MvcThrottle
                             if (limit > 0) rateLimit = limit;
                         }
 
+                        //apply custom rate limit to requests with blacklisted User-Agent
+                        if (Policy.UserAgentBlacklist != null)
+                        {
+                            //check if User-Agent has a match in the blacklist
+                            var match = Policy.UserAgentBlacklist.FirstOrDefault(s => identity.UserAgent.Contains(s));
+
+                            if (!string.IsNullOrWhiteSpace(match) && Policy.UserAgentRules.Keys.Contains(match))
+                            {
+                                var limit = Policy.UserAgentRules[match].GetLimit(rateLimitPeriod);
+                                if (limit > 0) rateLimit = limit;
+                            }
+                        }
+
                         //enforce ip rate limit as is most specific 
                         string ipRule = null;
                         if (Policy.IpRules != null && ContainsIp(Policy.IpRules.Keys.ToList(), identity.ClientIp, out ipRule))
@@ -179,6 +192,8 @@ namespace MvcThrottle
             entry.ClientIp = GetClientIp(request).ToString();
 
             entry.ClientKey = request.IsAuthenticated ? "auth" : "anon";
+
+            entry.UserAgent = request.UserAgent;
 
             var rd = request.RequestContext.RouteData;
             string currentAction = rd.GetRequiredString("action");
@@ -263,6 +278,9 @@ namespace MvcThrottle
 
             if (Policy.EndpointThrottling)
                 keyValues.Add(requestIdentity.Endpoint);
+
+            if (Policy.UserAgentThrottling)
+                keyValues.Add(requestIdentity.UserAgent);
 
             keyValues.Add(period.ToString());
 
@@ -419,6 +437,7 @@ namespace MvcThrottle
                 ClientIp = identity.ClientIp,
                 ClientKey = identity.ClientKey,
                 Endpoint = identity.Endpoint,
+                UserAgent = identity.UserAgent,
                 LogDate = DateTime.UtcNow,
                 RateLimit = rateLimit,
                 RateLimitPeriod = rateLimitPeriod,

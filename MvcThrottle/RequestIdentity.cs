@@ -15,6 +15,7 @@ namespace MvcThrottle
         public string ClientIp { get; set; }
         public string ClientKey { get; set; }
         public string Endpoint { get; set; }
+        public string UserAgent { get; set; }
 
         public override string ToString()
         {
